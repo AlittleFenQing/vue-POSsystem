@@ -12,10 +12,13 @@
                         <el-table-column  label="操作" width="100" fixed="right">
                             <template slot-scope="scope">
                                 <el-button type="text" size="small">删除</el-button>
-                                <el-button type="text" size="small">增加</el-button>
+                                <el-button type="text" size="small" @click="addOrderList(scope.row)">增加</el-button>
                             </template>
                         </el-table-column>
                     </el-table>
+                    <div class="totallDiv">
+                        <small>数量：</small> {{totallCount}}   &nbsp &nbsp &nbsp <small>金额：</small>  {{totallMoney}}
+                    </div>
                       <div class="div-btn">
                           <el-button type="warning">挂单</el-button>
                           <el-button type="danger">删除</el-button>
@@ -45,7 +48,7 @@
                    <div class="title">常用商品</div>
                    <div class="often-good-list">
                        <ul>
-                           <li v-for="goods in oftenGoods">
+                           <li v-for="goods in oftenGoods" @click="addOrderList(goods)">
                                <span >{{goods.goodsName}}</span>
                                <span class="g-price">￥{{goods.price}}元</span>
                            </li>
@@ -58,7 +61,7 @@
                        <el-tab-pane label="汉堡">
                            <div>
                                <ul class='cookList'>
-                                    <li v-for="goods in type0Goods">
+                                    <li v-for="goods in type0Goods" @click="addOrderList(goods)">
                                         <span class="foodImg"><img :src="goods.goodsImg" width="100%"></span>
                                         <span class="foodName">{{goods.goodsName}}</span>
                                         <span class="foodPrice">￥{{goods.price}}元</span>
@@ -69,7 +72,7 @@
                         <el-tab-pane label="小食">
                              <div>
                                <ul class='cookList'>
-                                    <li v-for="goods in type1Goods">
+                                    <li v-for="goods in type1Goods" @click="addOrderList(goods)">
                                         <span class="foodImg"><img :src="goods.goodsImg" width="100%"></span>
                                         <span class="foodName">{{goods.goodsName}}</span>
                                         <span class="foodPrice">￥{{goods.price}}元</span>
@@ -80,7 +83,7 @@
                         <el-tab-pane label="套餐">
                               <div>
                                <ul class='cookList'>
-                                    <li v-for="goods in type2Goods">
+                                    <li v-for="goods in type2Goods" @click="addOrderList(goods)">
                                         <span class="foodImg"><img :src="goods.goodsImg" width="100%"></span>
                                         <span class="foodName">{{goods.goodsName}}</span>
                                         <span class="foodPrice">￥{{goods.price}}元</span>
@@ -91,7 +94,7 @@
                         <el-tab-pane label="饮料">
                               <div>
                                <ul class='cookList'>
-                                    <li v-for="goods in type3Goods">
+                                    <li v-for="goods in type3Goods" @click="addOrderList(goods)">
                                         <span class="foodImg"><img :src="goods.goodsImg" width="100%"></span>
                                         <span class="foodName">{{goods.goodsName}}</span>
                                         <span class="foodPrice">￥{{goods.price}}元</span>
@@ -114,33 +117,14 @@ import axios from 'axios';
         name:'Pos',
         data(){
             return{
-                tableData:[{
-                          
-                    goodsName: '可口可乐',
-                    price: 8,
-                    count:1
-                    }, {
-                    
-                    goodsName: '香辣鸡腿堡',
-                    price: 15,
-                    count:1
-                    }, {
-                    
-                    goodsName: '爱心薯条',
-                    price: 8,
-                    count:1
-                    }, {
-                    
-                    goodsName: '甜筒',
-                    price: 8,
-                    count:1
-                }],
+                tableData:[  ],
                 oftenGoods:[ ],
                 type0Goods:[ ],
                 typ10Goods:[ ],
                 type3Goods:[ ],
                 type4Goods:[ ],
-                
+                totallMoney:[],
+                totallCount:[]
             }
         },
         created:function(){
@@ -166,6 +150,39 @@ import axios from 'axios';
         mounted:function(){
             var orderHeight=document.body.clientHeight;
             document.getElementById('order-list').style.height=orderHeight+'px';
+        },
+        methods:{
+            addOrderList(goods){
+            this.totallCount=0; //汇总数量清0
+            this.totallMoney=0;
+            let isHave=false;
+            //判断是否这个商品已经存在于订单列表
+            for (let i=0; i<this.tableData.length;i++){
+                console.log(this.tableData[i].goodsId);
+                if(this.tableData[i].goodsId==goods.goodsId){
+                    isHave=true; //存在
+                }
+            }
+            //根据isHave的值判断订单列表中是否已经有此商品
+            if(isHave){
+                //存在就进行数量添加
+                 let arr = this.tableData.filter(o =>o.goodsId == goods.goodsId);
+                 arr[0].count++;
+                 //console.log(arr);
+            }else{
+                //不存在就推入数组
+                let newGoods={goodsId:goods.goodsId,goodsName:goods.goodsName,price:goods.price,count:1};
+                 this.tableData.push(newGoods);
+
+            }
+
+            //进行数量和价格的汇总计算
+            this.tableData.forEach((element) => {
+                this.totallCount+=element.count;
+                this.totallMoney=this.totallMoney+(element.price*element.count);   
+            });
+           
+      }
         }
     }
 </script>
@@ -186,6 +203,7 @@ import axios from 'axios';
     padding: 10px;
 }
 .often-good-list ul li{
+     cursor: pointer;
     list-style: none;
     float: left;
     border: 1px solid #E5E9f2;
@@ -200,6 +218,7 @@ import axios from 'axios';
     clear: both;
 }
 .cookList li{
+        cursor: pointer;
        list-style: none;
        width:23%;
        border:1px solid #E5E9F2;
@@ -229,6 +248,11 @@ import axios from 'axios';
        font-size: 16px;
        padding-left: 10px;
        padding-top:10px;
+   }
+   .totallDiv{
+       background-color: #fff;
+       padding: 10px;
+       border-bottom: 1px solid #d3dce6;
    }
 </style>
 
